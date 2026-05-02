@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 streamlit
 langchain
 langchain-community
@@ -6,4 +7,14 @@ faiss-cpu
 transformers
 sentence-transformers
 torch
+=======
+streamlit
+langchain
+langchain-community
+langchain-text-splitters
+faiss-cpu
+transformers
+sentence-transformers
+torch
+>>>>>>> 5bbdd75465669727ef6f2985d47bb6fbd320b48e
 pypdf
