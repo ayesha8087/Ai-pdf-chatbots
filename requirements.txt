@@ -1,20 +1,9 @@
-<<<<<<< HEAD
 streamlit
 langchain
 langchain-community
 langchain-text-splitters
 faiss-cpu
-transformers
+transformers==4.41.2
 sentence-transformers
-torch
-=======
-streamlit
-langchain
-langchain-community
-langchain-text-splitters
-faiss-cpu
-transformers
-sentence-transformers
-torch
->>>>>>> 5bbdd75465669727ef6f2985d47bb6fbd320b48e
-pypdf
+huggingface-hub==0.23.0
+tokenizers==0.19.1
