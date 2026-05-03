@@ -20,8 +20,8 @@ def clean_text(text):
 @st.cache_resource
 def load_llm():
     return pipeline(
-        "text2text-generation",
-        model="google/flan-t5-base"
+        "text-generation",
+        model="distilgpt2"
     )
 
 llm = load_llm()
