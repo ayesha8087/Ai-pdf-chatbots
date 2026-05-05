@@ -59,8 +59,8 @@ with st.sidebar:
             all_docs.extend(docs)
 
         splitter = RecursiveCharacterTextSplitter(
-            chunk_size=800,
-            chunk_overlap=150
+            chunk_size=500,
+            chunk_overlap=100
         )
 
         chunks = splitter.split_documents(all_docs)
@@ -85,26 +85,22 @@ if query:
 
     if st.session_state.db:
 
-        docs = st.session_state.db.similarity_search(query, k=4)
-        context = " ".join([clean_text(d.page_content) for d in docs])
+        docs = st.session_state.db.similarity_search(query, k=3)
+        context = "\n\n".join([d.page_content for d in docs])
 
         prompt = f"""
-You are an intelligent AI assistant.
+Answer the question using ONLY the context below.
 
-Rules:
-- Answer ONLY from context
-- Simple English
-- Max 2 lines
-- No repetition
-- If not found: say "Not found in document"
+If the answer is not clearly in the context, say:
+Not found in document.
+
+Keep answer short (max 2 lines) and simple.
 
 Context:
 {context}
 
 Question:
 {query}
-
-Answer:
 """
 
         result = llm(
@@ -115,6 +111,8 @@ Answer:
         )
 
         answer = result[0]["generated_text"].strip()
+        if len(answer) < 5:
+           answer = "Not found in document"
 
     else:
         answer = "⚠️ Please upload documents first."
