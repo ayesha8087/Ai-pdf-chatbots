@@ -20,8 +20,8 @@ def clean_text(text):
 @st.cache_resource
 def load_llm():
     return pipeline(
-        "text-generation",
-        model="distilgpt2"
+        "text2text-generation",
+        model="google/flan-t5-base"
     )
 
 llm = load_llm()
@@ -114,7 +114,8 @@ Answer:
             do_sample=False
         )
 
-        answer = result[0]["generated_text"].strip()
+        full_output = result[0]["generated_text"]
+        answer = full_output.split("Answer:")[-1].strip()
 
     else:
         answer = "⚠️ Please upload documents first."
