@@ -7,21 +7,22 @@ from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from transformers import pipeline
 
-st.set_page_config(page_title="Smart AI PDF SaaS", layout="wide")
+st.set_page_config(page_title="AI Study Helper", layout="wide")
 
-st.title("🚀 Smart AI Document Assistant")
+# ✅ NEW TITLE (SELLING PURPOSE)
+st.title("📚 AI Study Helper (PDF Notes + Q&A + Summary)")
 
 # ---------------- CLEAN TEXT ----------------
 def clean_text(text):
-    text = re.sub(r'\s+', ' ', text)
-    return text.strip()
+    return re.sub(r'\s+', ' ', text).strip()
 
 # ---------------- LOAD MODEL ----------------
 @st.cache_resource
 def load_llm():
     return pipeline(
         "text2text-generation",
-        model="google/flan-t5-base"
+        model="google/flan-t5-large",
+        device=-1  # CPU
     )
 
 llm = load_llm()
@@ -30,12 +31,12 @@ llm = load_llm()
 @st.cache_resource
 def load_embeddings():
     return HuggingFaceEmbeddings(
-        model_name="sentence-transformers/all-MiniLM-L6-v2"
+        model_name="sentence-transformers/all-mpnet-base-v2"
     )
 
 embeddings = load_embeddings()
 
-# ---------------- SESSION MEMORY ----------------
+# ---------------- SESSION ----------------
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
@@ -44,7 +45,7 @@ if "db" not in st.session_state:
 
 # ---------------- SIDEBAR ----------------
 with st.sidebar:
-    st.header("📂 Upload Documents")
+    st.header("📂 Upload PDF Files")
     files = st.file_uploader("Upload PDFs", type="pdf", accept_multiple_files=True)
 
     if files:
@@ -69,13 +70,20 @@ with st.sidebar:
 
         st.success("✅ Documents processed!")
 
+# ---------------- MODE SELECTOR ----------------
+mode = st.selectbox("Choose Task", [
+    "Ask Question",
+    "Summarize Chapter",
+    "Generate Notes"
+])
+
 # ---------------- CHAT UI ----------------
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.write(msg["content"])
 
 # ---------------- USER INPUT ----------------
-query = st.chat_input("Ask anything from your documents...")
+query = st.chat_input("Ask or choose task...")
 
 if query:
     st.session_state.messages.append({"role": "user", "content": query})
@@ -85,16 +93,49 @@ if query:
 
     if st.session_state.db:
 
-        docs = st.session_state.db.similarity_search(query, k=3)
-        context = "\n\n".join([d.page_content for d in docs])
+        docs = st.session_state.db.max_marginal_relevance_search(
+    query,
+    k=5,
+    fetch_k=10
+)
+        context = "\n\n".join([
+    f"Chunk {i+1}: {clean_text(d.page_content)}"
+    for i, d in enumerate(docs)
+])
 
-        prompt = f"""
-Answer the question using ONLY the context below.
+        # ✅ MODE LOGIC
+        if mode == "Summarize Chapter":
+            prompt = f"""
+Summarize the following content clearly.
 
-If the answer is not clearly in the context, say:
-Not found in document.
+- Use bullet points
+- Include key concepts only
+- 4–6 points
 
-Keep answer short (max 2 lines) and simple.
+Content:
+{context}
+"""
+        elif mode == "Generate Notes":
+            prompt = f"""
+Create study notes from this content.
+
+- Use bullet points
+- Include definitions
+- Keep it useful for exams
+- 5–8 points
+
+Content:
+{context}
+"""
+
+        else:
+            prompt = f"""
+Answer ONLY from the context below.
+
+Find the exact answer from text.
+Do not guess.
+
+If not found, say: Not found in document.
 
 Context:
 {context}
@@ -105,14 +146,15 @@ Question:
 
         result = llm(
             prompt,
-            max_new_tokens=100,
-            temperature=0.2,
+            max_new_tokens=200,
+            temperature=0.3,
             do_sample=False
         )
 
         answer = result[0]["generated_text"].strip()
-        if len(answer) < 5:
-           answer = "Not found in document"
+
+        if len(answer.strip()) < 10:
+            answer = "Not found in document"
 
     else:
         answer = "⚠️ Please upload documents first."
@@ -121,3 +163,6 @@ Question:
 
     with st.chat_message("assistant"):
         st.write(answer)
+
+        # ✅ DOWNLOAD BUTTON (VERY IMPORTANT FOR SELLING)
+        st.download_button("📥 Download Result", answer)
