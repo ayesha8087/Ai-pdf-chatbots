@@ -97,6 +97,7 @@ if query:
     query,
     k=5,
     fetch_k=10
+
 )
         context = "\n\n".join([
     f"Chunk {i+1}: {clean_text(d.page_content)}"
@@ -104,32 +105,43 @@ if query:
 ])
 
         # ✅ MODE LOGIC
-        if mode == "Summarize Chapter":
-            prompt = f"""
-Summarize the following content clearly.
+    if mode == "Summarize Chapter":
 
+     prompt = f"""
+You are a helpful AI study assistant.
+
+Read the content carefully and create a SHORT summary.
+
+Rules:
+- Use simple English
 - Use bullet points
-- Include key concepts only
-- 4–6 points
-
-Content:
-{context}
-"""
-        elif mode == "Generate Notes":
-            prompt = f"""
-Create study notes from this content.
-
-- Use bullet points
-- Include definitions
-- Keep it useful for exams
-- 5–8 points
+- Mention only important ideas
+- Write 5 bullet points
 
 Content:
 {context}
 """
 
-        else:
-            prompt = f"""
+elif mode == "Generate Notes":
+
+    prompt = f"""
+You are an AI note generator.
+
+Create STUDY NOTES from the content below.
+
+Rules:
+- Use bullet points
+- Include important definitions
+- Include key concepts
+- Keep notes useful for exams
+- Write at least 5 points
+
+Content:
+{context}
+"""
+
+else:
+    prompt = f"""
 Answer ONLY from the context below.
 
 Find the exact answer from text.
@@ -144,16 +156,16 @@ Question:
 {query}
 """
 
-        result = llm(
-            prompt,
-            max_new_tokens=200,
-            temperature=0.3,
-            do_sample=False
+    result = llm(
+        prompt,
+        max_new_tokens=220,
+        temperature=0.3,
+        do_sample=False
         )
 
-        answer = result[0]["generated_text"].strip()
+    answer = result[0]["generated_text"].strip()
 
-        if len(answer.strip()) < 10:
+    if len(answer.strip()) < 10:
             answer = "Not found in document"
 
     else:
