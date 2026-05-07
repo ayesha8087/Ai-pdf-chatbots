@@ -86,7 +86,11 @@ for msg in st.session_state.messages:
 query = st.chat_input("Ask or choose task...")
 
 if query:
-    st.session_state.messages.append({"role": "user", "content": query})
+
+    st.session_state.messages.append({
+        "role": "user",
+        "content": query
+    })
 
     with st.chat_message("user"):
         st.write(query)
@@ -94,20 +98,21 @@ if query:
     if st.session_state.db:
 
         docs = st.session_state.db.max_marginal_relevance_search(
-    query,
-    k=5,
-    fetch_k=10
+            query,
+            k=5,
+            fetch_k=10
+        )
 
-)
         context = "\n\n".join([
-    f"Chunk {i+1}: {clean_text(d.page_content)}"
-    for i, d in enumerate(docs)
-])
+            f"Chunk {i+1}: {clean_text(d.page_content)}"
+            for i, d in enumerate(docs)
+        ])
 
-        # ✅ MODE LOGIC
-    if mode == "Summarize Chapter":
+        # ---------------- MODE LOGIC ----------------
 
-     prompt = f"""
+        if mode == "Summarize Chapter":
+
+            prompt = f"""
 You are a helpful AI study assistant.
 
 Read the content carefully and create a SHORT summary.
@@ -122,9 +127,9 @@ Content:
 {context}
 """
 
-elif mode == "Generate Notes":
+        elif mode == "Generate Notes":
 
-    prompt = f"""
+            prompt = f"""
 You are an AI note generator.
 
 Create STUDY NOTES from the content below.
@@ -140,8 +145,9 @@ Content:
 {context}
 """
 
-else:
-    prompt = f"""
+        else:
+
+            prompt = f"""
 Answer ONLY from the context below.
 
 Find the exact answer from text.
@@ -156,25 +162,30 @@ Question:
 {query}
 """
 
-    result = llm(
-        prompt,
-        max_new_tokens=220,
-        temperature=0.3,
-        do_sample=False
+        result = llm(
+            prompt,
+            max_new_tokens=220,
+            temperature=0.3,
+            do_sample=False
         )
 
-    answer = result[0]["generated_text"].strip()
+        answer = result[0]["generated_text"].strip()
 
-    if len(answer.strip()) < 10:
+        if len(answer.strip()) < 10:
             answer = "Not found in document"
 
     else:
         answer = "⚠️ Please upload documents first."
 
-    st.session_state.messages.append({"role": "assistant", "content": answer})
+    st.session_state.messages.append({
+        "role": "assistant",
+        "content": answer
+    })
 
     with st.chat_message("assistant"):
         st.write(answer)
 
-        # ✅ DOWNLOAD BUTTON (VERY IMPORTANT FOR SELLING)
-        st.download_button("📥 Download Result", answer)
+        st.download_button(
+            "📥 Download Result",
+            answer
+        )
