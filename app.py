@@ -7,9 +7,13 @@ from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from transformers import pipeline
 
-st.set_page_config(page_title="AI Study Helper", layout="wide")
+# ---------------- PAGE CONFIG ----------------
+st.set_page_config(
+    page_title="AI Study Helper",
+    layout="wide"
+)
 
-# ✅ NEW TITLE (SELLING PURPOSE)
+# ---------------- TITLE ----------------
 st.title("📚 AI Study Helper (PDF Notes + Q&A + Summary)")
 
 # ---------------- CLEAN TEXT ----------------
@@ -21,13 +25,13 @@ def clean_text(text):
 def load_llm():
     return pipeline(
         "text2text-generation",
-        model="google/flan-t5-large",
-        device=-1  # CPU
+        model="google/flan-t5-base",
+        device=-1
     )
 
 llm = load_llm()
 
-# ---------------- EMBEDDINGS ----------------
+# ---------------- LOAD EMBEDDINGS ----------------
 @st.cache_resource
 def load_embeddings():
     return HuggingFaceEmbeddings(
@@ -36,7 +40,7 @@ def load_embeddings():
 
 embeddings = load_embeddings()
 
-# ---------------- SESSION ----------------
+# ---------------- SESSION STATE ----------------
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
@@ -45,18 +49,38 @@ if "db" not in st.session_state:
 
 # ---------------- SIDEBAR ----------------
 with st.sidebar:
+
     st.header("📂 Upload PDF Files")
-    files = st.file_uploader("Upload PDFs", type="pdf", accept_multiple_files=True)
+
+    files = st.file_uploader(
+        "Upload PDFs",
+        type="pdf",
+        accept_multiple_files=True
+    )
+
+    # ✅ CLEAR CHAT BUTTON
+    if st.button("🗑 Clear Chat"):
+        st.session_state.messages = []
+        st.rerun()
 
     if files:
+
+        st.subheader("📄 Uploaded Files")
+
+        for file in files:
+            st.write(f"✅ {file.name}")
+
         all_docs = []
 
         for file in files:
+
             with open(file.name, "wb") as f:
                 f.write(file.read())
 
             loader = PyPDFLoader(file.name)
+
             docs = loader.load()
+
             all_docs.extend(docs)
 
         splitter = RecursiveCharacterTextSplitter(
@@ -66,24 +90,31 @@ with st.sidebar:
 
         chunks = splitter.split_documents(all_docs)
 
-        st.session_state.db = FAISS.from_documents(chunks, embeddings)
+        st.session_state.db = FAISS.from_documents(
+            chunks,
+            embeddings
+        )
 
-        st.success("✅ Documents processed!")
+        st.success("✅ Documents processed successfully!")
 
 # ---------------- MODE SELECTOR ----------------
-mode = st.selectbox("Choose Task", [
-    "Ask Question",
-    "Summarize Chapter",
-    "Generate Notes"
-])
+mode = st.selectbox(
+    "Choose Task",
+    [
+        "Ask Question",
+        "Summarize Chapter",
+        "Generate Notes"
+    ]
+)
 
-# ---------------- CHAT UI ----------------
+# ---------------- CHAT HISTORY ----------------
 for msg in st.session_state.messages:
+
     with st.chat_message(msg["role"]):
         st.write(msg["content"])
 
 # ---------------- USER INPUT ----------------
-query = st.chat_input("Ask or choose task...")
+query = st.chat_input("Ask anything from your documents...")
 
 if query:
 
@@ -108,20 +139,20 @@ if query:
             for i, d in enumerate(docs)
         ])
 
-        # ---------------- MODE LOGIC ----------------
+        # ---------------- TASK LOGIC ----------------
 
         if mode == "Summarize Chapter":
 
             prompt = f"""
 You are a helpful AI study assistant.
 
-Read the content carefully and create a SHORT summary.
+Create a SHORT summary.
 
 Rules:
 - Use simple English
 - Use bullet points
-- Mention only important ideas
-- Write 5 bullet points
+- Mention important ideas only
+- Write 5 points
 
 Content:
 {context}
@@ -130,15 +161,15 @@ Content:
         elif mode == "Generate Notes":
 
             prompt = f"""
-You are an AI note generator.
+You are an AI notes generator.
 
-Create STUDY NOTES from the content below.
+Create STUDY NOTES from the content.
 
 Rules:
 - Use bullet points
-- Include important definitions
+- Include definitions
 - Include key concepts
-- Keep notes useful for exams
+- Make notes exam-friendly
 - Write at least 5 points
 
 Content:
@@ -148,12 +179,15 @@ Content:
         else:
 
             prompt = f"""
-Answer ONLY from the context below.
+Answer ONLY using the context below.
 
-Find the exact answer from text.
-Do not guess.
+Rules:
+- Do not guess
+- Use simple English
+- Keep answer short
 
-If not found, say: Not found in document.
+If answer not found:
+say "Not found in document."
 
 Context:
 {context}
@@ -172,7 +206,7 @@ Question:
         answer = result[0]["generated_text"].strip()
 
         if len(answer.strip()) < 10:
-            answer = "Not found in document"
+            answer = "Not found in document."
 
     else:
         answer = "⚠️ Please upload documents first."
@@ -183,9 +217,20 @@ Question:
     })
 
     with st.chat_message("assistant"):
+
         st.write(answer)
 
+        # ✅ DOWNLOAD BUTTON
         st.download_button(
-            "📥 Download Result",
-            answer
+            label="📥 Download Result",
+            data=answer,
+            file_name="ai_result.txt",
+            mime="text/plain"
         )
+
+# ---------------- FOOTER ----------------
+st.markdown("---")
+
+st.caption(
+    "🚀 Built with Python, Streamlit, LangChain & Hugging Face"
+)
