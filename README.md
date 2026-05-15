@@ -44,19 +44,14 @@ Built using **Streamlit, LangChain, FAISS, Hugging Face Transformers, and Senten
 ## 📸 Screenshots
 
 ### 🏠 Home Interface
-()
+![Home](Screenshot (1).png)
 
-### 💬 Q&A Mode
-()
-
-### 📝 Notes Generation
-()
-
-
+### 💬  Modes
+![Chat](Screenshot (2).png)
 
 ## ⚙️ Installation
 
 ```bash
-git clone https://github.com/your-username/ai-study-helper.git
+git clone https://github.com/ayesha8087/Ai-pdf-chatbots
 cd ai-study-helper
 pip install -r requirements.txt
