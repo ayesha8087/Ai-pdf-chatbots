@@ -49,9 +49,27 @@ Built using **Streamlit, LangChain, FAISS, Hugging Face Transformers, and Senten
 ### 💬  Modes
 ![Chat](Screenshot (2).png)
 
+---
+
+## 🔮 Future Improvements
+
+* 🔐 User Authentication System
+* ☁️ Cloud Deployment Support
+* 🎨 Improved UI/UX Design
+* 🗂️ Chat History Saving
+* 🧠 More Advanced LLM Integration
+* 🌍 Multi-language Support
+* 📊 Better PDF Summarization Accuracy
+* 📌 Citation & Source Highlighting
+* ⚡ Faster Vector Search Optimization
+* 🗃️ Database Integration for User Sessions
+
+---
+
 ## ⚙️ Installation
 
 ```bash
 git clone https://github.com/ayesha8087/Ai-pdf-chatbots
 cd ai-study-helper
 pip install -r requirements.txt
+
